@@ -64,6 +64,12 @@ test('installProjectAgentRules writes common agent instruction files', () => {
   assert.equal(fs.existsSync(path.join(project, 'CLAUDE.md')), true);
   assert.equal(fs.existsSync(path.join(project, 'GEMINI.md')), true);
   assert.equal(fs.existsSync(path.join(project, '.cursor', 'rules', 'security-guardrails.mdc')), true);
+  assert.equal(fs.existsSync(path.join(project, '.github', 'copilot-instructions.md')), true);
+  assert.equal(fs.existsSync(path.join(project, '.continue', 'rules', 'security-guardrails.md')), true);
+  assert.equal(fs.existsSync(path.join(project, '.windsurf', 'rules', 'security-guardrails.md')), true);
+  assert.equal(fs.existsSync(path.join(project, '.aider', 'security-guardrails.md')), true);
+  assert.equal(fs.existsSync(path.join(project, '.roo', 'rules', 'security-guardrails.md')), true);
+  assert.equal(fs.existsSync(path.join(project, '.clinerules')), true);
 });
 
 test('installAgentRules supports both global and project scopes', () => {

@@ -15,7 +15,7 @@ npx --yes security-guardrails scan
 Initialize common project hooks:
 
 ```sh
-npx --yes security-guardrails init
+npx --yes security-guardrails init --preset auto
 ```
 
 Install the bundled Codex skill and automatically update global agent instructions:
@@ -59,6 +59,7 @@ Suspicious execution patterns:
 - dynamic `Function`/`constructor` loaders combined with `eval`, `fromCharCode`, or `child_process`
 - very long obfuscated JavaScript lines with loader markers
 - executable artifacts such as `.exe`, `.dll`, `.bat`, `.cmd`, `.scr`, `.vbs`, `.wsf` inside source/build-input folders
+- suspicious npm lifecycle scripts and insecure or suspicious npm lockfile URLs
 
 ## Default Ignored Paths
 
@@ -70,11 +71,78 @@ The scanner ignores normal dependency/build/cache folders:
 
 ```sh
 security-guardrails scan [paths...]
-security-guardrails init
+security-guardrails scan --ci [--format text|json|sarif] [paths...]
+security-guardrails diff-scan [--staged]
+security-guardrails scan-history [--max-commits <n>] [--format text|json|sarif] [--include-self]
+security-guardrails init [--preset auto|node|go|tauri|python|rust]
 security-guardrails detect
+security-guardrails install-hooks
 security-guardrails install-skill [--codex-home <path>] [--home <path>]
 security-guardrails install-agent-rules [--scope global|project|both] [--home <path>] [--project <path>]
+security-guardrails publish [--real]
 security-guardrails print-agents-snippet
+```
+
+## Configuration
+
+`init` creates `.security-guardrails.json` when one does not exist:
+
+```json
+{
+  "roots": ["backend-go", "backend", "frontend", "desktop", "packages", "scripts", ".github", ".vscode"],
+  "ignoreDirs": [],
+  "skipFiles": [],
+  "allowExecutables": [],
+  "extraSignatures": [],
+  "extraRegexSignatures": [],
+  "auditAllPackageScripts": false
+}
+```
+
+Use `allowExecutables` sparingly for reviewed binaries that are intentionally committed.
+Use `extraSignatures` for literal project-specific IoCs and `extraRegexSignatures` for reviewed regex detections.
+
+## Presets
+
+`init --preset auto` detects the stack. Explicit presets are available for `node`, `go`, `tauri`, `python`, and `rust`.
+
+Current integrations:
+
+- Node: adds `security:guardrails` and prepends existing `prestart`, `prebuild`, `pretest`, and `prewatch` hooks.
+- Go: adds a guarded `Makefile` target when requested and wires `build`, `test`, `test-race`, and `vet`.
+- Python: adds a pytest guard test when `pyproject.toml` is present.
+- GitHub Actions: adds `.github/workflows/security-guardrails.yml` when workflows already exist.
+
+## CI Output
+
+Use JSON or SARIF in CI:
+
+```sh
+npx --yes security-guardrails scan --ci --format json
+npx --yes security-guardrails scan --ci --format sarif > security-guardrails.sarif
+```
+
+## Git Workflows
+
+Scan only changed files:
+
+```sh
+npx --yes security-guardrails diff-scan
+npx --yes security-guardrails diff-scan --staged
+```
+
+Scan history for known IoCs:
+
+```sh
+npx --yes security-guardrails scan-history --max-commits 1000
+```
+
+When the package scans its own repository, history scanning skips documented signatures by default. Use `--include-self` when you intentionally want to audit the package's own signature history.
+
+Install a pre-commit hook:
+
+```sh
+npx --yes security-guardrails install-hooks
 ```
 
 `install-skill` writes:
@@ -91,6 +159,12 @@ security-guardrails print-agents-snippet
 - `CLAUDE.md`
 - `GEMINI.md`
 - `.cursor/rules/security-guardrails.mdc`
+- `.github/copilot-instructions.md`
+- `.continue/rules/security-guardrails.md`
+- `.windsurf/rules/security-guardrails.md`
+- `.aider/security-guardrails.md`
+- `.roo/rules/security-guardrails.md`
+- `.clinerules`
 
 `install-agent-rules --scope both` writes both global and project-level rules.
 
@@ -109,6 +183,18 @@ git branch -M main
 git remote add origin https://github.com/TwinSparkGames/security-guardrails.git
 git push -u origin main
 npm publish --access public
+```
+
+The packaged helper runs the safe release checks:
+
+```sh
+npx --yes security-guardrails publish
+```
+
+After `npm login`, publish for real:
+
+```sh
+npx --yes security-guardrails publish --real
 ```
 
 After publish, users can run:

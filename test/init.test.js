@@ -28,4 +28,16 @@ test('initProject adds npm guard script and prepends existing hooks', () => {
   assert.ok(result.changes.length >= 2);
   assert.equal(pkg.scripts['security:guardrails'], 'security-guardrails scan');
   assert.equal(pkg.scripts.prebuild, 'npm run security:guardrails && npm test');
+  assert.equal(fs.existsSync(path.join(root, '.security-guardrails.json')), true);
+});
+
+test('initProject go preset creates a guarded Makefile', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'security-guardrails-go-init-'));
+
+  const result = initProject({ cwd: root, preset: 'go' });
+  const makefile = fs.readFileSync(path.join(root, 'Makefile'), 'utf8');
+
+  assert.equal(result.preset, 'go');
+  assert.match(makefile, /guard:/);
+  assert.match(makefile, /test: guard/);
 });

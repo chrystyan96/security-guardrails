@@ -24,6 +24,18 @@ Skip only for throwaway snippets, one-off static files, pure documentation, or w
 4. Ignore dependency/build/cache folders to keep false positives low.
 5. Verify with direct scanner execution and one stack-specific command.
 
+Prefer these commands when available:
+
+```sh
+npx --yes security-guardrails init --preset auto
+npx --yes security-guardrails scan --ci --format json
+npx --yes security-guardrails scan --ci --format sarif
+npx --yes security-guardrails diff-scan --staged
+npx --yes security-guardrails scan-history --max-commits 1000
+npx --yes security-guardrails install-hooks
+npx --yes security-guardrails install-agent-rules --scope project
+```
+
 ## Minimum Detections
 
 Block known injected JavaScript loader IoCs:
@@ -45,6 +57,9 @@ Block suspicious execution patterns:
 - dynamic `Function`/`constructor` loaders that combine `eval`, `fromCharCode`, or `child_process`
 - very long obfuscated JavaScript lines with loader markers
 - executable artifacts such as `.exe`, `.dll`, `.bat`, `.cmd`, `.scr`, `.vbs`, `.wsf` inside source/build-input folders
+- suspicious npm lifecycle scripts and insecure or suspicious npm lockfile URLs
+
+Prefer a project `.security-guardrails.json` for reviewed exceptions, extra literal IoCs, and extra regex detections instead of weakening the scanner code.
 
 ## Preferred CLI
 
